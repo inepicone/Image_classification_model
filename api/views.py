@@ -47,15 +47,10 @@ def upload_image():
 
     # File received and it's an image, we must show it and get predictions
     if file and utils.allowed_file(file.filename):
-        # In order to correctly display the image in the UI and get model
-        # predictions you should implement the following:
-        #   1. Get an unique file name using utils.get_file_hash() function
-        #   2. Store the image to disk using the new name
-        #   3. Send the file to be processed by the `model` service
-        #      Hint: Use middleware.model_predict() for sending jobs to model
-        #            service using Redis.
-        #   4. Update `context` dict with the corresponding values
-        # TODO
+        # Get an unique file name using utils.get_file_hash() function
+        # Store the image to disk using the new name
+        # Send the file to be processed by the `model` service
+        # Update `context` dict with the corresponding values
 
         hash_name = utils.get_file_hash(file)
         file_path = os.path.join(settings.UPLOAD_FOLDER, hash_name)
@@ -71,7 +66,6 @@ def upload_image():
         }
 
         # Update `render_template()` parameters as needed
-        # TODO
         return render_template(
             "index.html", filename=hash_name, context=context
         )
@@ -116,16 +110,12 @@ def predict():
         - "prediction" model predicted class as string.
         - "score" model confidence score for the predicted class as float.
     """
-    # To correctly implement this endpoint you should:
-    #   1. Check a file was sent and that file is an image
-    #   2. Store the image to disk
-    #   3. Send the file to be processed by the `model` service
-    #      Hint: Use middleware.model_predict() for sending jobs to model
-    #            service using Redis.
-    #   4. Update and return `rpse` dict with the corresponding values
+    # Check a file was sent and that file is an image
+    # Store the image to disk
+    # Send the file to be processed by the `model` service
+    # Update and return `rpse` dict with the corresponding values
     # If user sends an invalid request (e.g. no file provided) this endpoint
     # should return `rpse` dict with default values HTTP 400 Bad Request code
-    # TODO
     
     rpse = {"success": False, "prediction": None, "score": None}
     # file_check = ("file" in request.files) & (request.files["file"] is not None)
@@ -179,7 +169,6 @@ def feedback():
 
     # Store the reported data to a file on the corresponding path
     # already provided in settings.py module
-    # TODO
     with open(settings.FEEDBACK_FILEPATH, "a") as data:
         data.write(str(report) + "\n")
         data.close()

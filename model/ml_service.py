@@ -7,7 +7,7 @@ from tensorflow.keras.applications import resnet50
 from tensorflow.keras.preprocessing import image
 import numpy as np
 
-# TODO
+
 # Connect to Redis and assign to variable `db``
 # Make use of settings.py module to get Redis settings like host, port, etc.
 db = redis.Redis(
@@ -16,8 +16,7 @@ db = redis.Redis(
     db = settings.REDIS_DB_ID
 )
 
-# TODO
-# Load your ML model and assign to variable `model`
+# Load ML model and assign to variable `model`
 model = resnet50.ResNet50(include_top=True, weights="imagenet")
 
 
@@ -37,7 +36,7 @@ def predict(image_name):
         Model predicted class as a string and the corresponding confidence
         score as a number.
     """
-    # TODO
+
     file_path = os.path.join(settings.UPLOAD_FOLDER, image_name)
     img = image.load_img(file_path, target_size=(224, 224))
     img = image.img_to_array(img)
@@ -63,20 +62,14 @@ def classify_process():
     received, then, run our ML model to get predictions.
     """
     while True:
-        # Inside this loop you should add the code to:
-        #   1. Take a new job from Redis
-        #   2. Run your ML model on the given data
-        #   3. Store model prediction in a dict with the following shape:
-        #      {
-        #         "prediction": str,
-        #         "score": float,
-        #      }
-        #   4. Store the results on Redis using the original job ID as the key
-        #      so the API can match the results it gets to the original job
-        #      sent
-        # Hint: You should be able to successfully implement the communication
-        #       code with Redis making use of functions `brpop()` and `set()`.
-        # TODO
+        # Take a new job from Redis
+        # Run ML model on the given data
+        # Store model prediction in a dict with the following shape:
+        # {"prediction": str, "score": float}
+        # Store the results on Redis using the original job ID as the key
+        # so the API can match the results it gets to the original job
+        # sent
+        
         _, data = db.brpop(settings.REDIS_QUEUE)
         data = json.loads(data)
         pred_class, pred_score = predict(data["image_name"])
