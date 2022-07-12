@@ -1,7 +1,7 @@
 # AnyoneAI - Project IV
 ## Flask ML API
 
-## Install and run
+### Install and run
 
 To run the services using compose:
 
@@ -15,9 +15,9 @@ To stop the services:
 $ docker-compose down
 ```
 
-## Tests
+### Tests
 
-### Integration end-to-end
+#### Integration end-to-end
 
 You must have the full pipeline running and [requests](https://docs.python-requests.org/en/latest/) library installed. Then, from this project root folder run:
 
@@ -25,11 +25,11 @@ You must have the full pipeline running and [requests](https://docs.python-reque
 $ python tests/test_integration.py
 ```
 
-### Modules
+#### Modules
 
 We make use of [multi-stage docker builds](https://docs.docker.com/develop/develop-images/multistage-build/) so we can have into the same Dockerfile environments for testing and also for deploying our service.
 
-#### Api
+##### API
 
 Run:
 
@@ -60,7 +60,7 @@ You will only need to pay attention to the logs corresponding to the testing cod
 
 You are good if all tests are passing.
 
-##### Model
+##### MODEL
 
 Same as api, run:
 
