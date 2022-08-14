@@ -1,6 +1,6 @@
 import settings
-from flask import Flask
-from views import router
+from   flask import Flask
+from   views import router
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = settings.UPLOAD_FOLDER

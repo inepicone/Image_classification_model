@@ -1,10 +1,14 @@
+from   curses             import flash
+from   functools          import partial
+
 import os
 import hashlib
+from   tkinter.messagebox import WARNING
 
 def allowed_file(filename):
     """
     Checks if the format for the file received is acceptable. For this
-    particular case, we must accept only image files.
+    particular case, we must accept only image files. ['png', 'jpg', 'jpeg', 'gif']
 
     Parameters
     ----------
@@ -16,13 +20,18 @@ def allowed_file(filename):
     bool
         True if the file is an image, False otherwise.
     """
-
+    # Current implementation will allow any kind of file.
+    
+    # formato de archivos permitidos:
+    # usamos tuplas porque es mas rapido
     ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif"}
-    _, ext = os.path.splitext(filename)
-    ext = ext.lower() 
 
-    return ext in ALLOWED_EXTENSIONS
+    # _ variable de descarte
+    ext = os.path.splitext(filename)[1].lower()
 
+    # instaed of using if + else --> valid_file = ext in ALLOWED_EXTENSIONS esto me retorna true si esta en la lista que le pase o false si no esta
+    valid_file = ext in ALLOWED_EXTENSIONS
+    return valid_file
 
 def get_file_hash(file):
     """
@@ -40,11 +49,16 @@ def get_file_hash(file):
     str
         New filename based in md5 file hash.
     """
+    
+    # Current implementation will return the original file name.
+   
+    md5 = hashlib.md5(file.read()).hexdigest()
+    
+    ext = os.path.splitext(file.filename)[1].lower()
 
-    hash_id = hashlib.md5(file.read()).hexdigest()
-    _, ext = os.path.splitext(file.filename)
-    ext = ext.lower()
-    hash_name = f"{hash_id}{ext}"
+    # return --> md5.hexdigest() + ext  
+    ret = f'{md5}{ext}'
+    # its important to go back to the forst position to start reading the next file:
     file.seek(0)
     
-    return hash_name
+    return ret

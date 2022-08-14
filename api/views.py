@@ -1,23 +1,20 @@
-from opcode import hasname
-import os
-import utils
-import settings
-import json
-from werkzeug.utils import secure_filename
-from middleware import model_predict
-from flask import jsonify
+import  json
+import  utils
+import  settings
+import  os
+from    middleware import model_predict
 
 from flask import (
-    Blueprint,
-    flash,
-    redirect,
-    render_template,
-    request,
-    url_for,
+    Blueprint,          # blueprint es una forma de dividir el codigo.
+    flash,              # es el print de flask.
+    redirect,           # para llevar el usuario de una pagina a otra.
+    render_template,    # para poder escribir html.
+    request,            # se para en el puerto y se obtiene la informacion que puede obtener de cada ruta (cada endpoint)
+    url_for,            # Esta operación recibe como parámetro el nombre del método y nos devuelve la ruta.
+    jsonify
 )
 
 router = Blueprint("app_router", __name__, template_folder="templates")
-
 
 @router.route("/", methods=["GET"])
 def index():
@@ -26,52 +23,57 @@ def index():
     """
     return render_template("index.html")
 
-
-@router.route("/", methods=["POST"])
+#endopoint to upload de image we want to identify 
+@router.route("/", methods=["POST"]) 
 def upload_image():
     """
     Function used in our frontend so we can upload and show an image.
-    When it receives an image from the UI, it also calls our ML model to
+    When it receives an image from the UI, 
+    it also calls our ML model to
     get and display the predictions.
+    
     """
+    
+    # UI --> user interface
     # No file received, show basic UI
+
     if "file" not in request.files:
         flash("No file part")
-        return redirect(request.url)
-
-    # File received but no filename is provided, show basic UI
+        return redirect(request.url) # if there is no file --> se queda en el mismo lugar?
+    
     file = request.files["file"]
+    
+    # File received but no filename is provided, show basic UI
     if file.filename == "":
         flash("No image selected for uploading")
         return redirect(request.url)
-
+ 
     # File received and it's an image, we must show it and get predictions
     if file and utils.allowed_file(file.filename):
-        # Get an unique file name using utils.get_file_hash() function
-        # Store the image to disk using the new name
-        # Send the file to be processed by the `model` service
-        # Update `context` dict with the corresponding values
+        new_name    = utils.get_file_hash(file)
+        path        = os.path.join(settings.UPLOAD_FOLDER, new_name)
+        
+        if not os.path.exists(path):
+            file.save(path)
 
-        hash_name = utils.get_file_hash(file)
-        file_path = os.path.join(settings.UPLOAD_FOLDER, hash_name)
-        if os.path.isfile(file_path) == False:
-            hash_name = secure_filename(hash_name)
-            file.save(file_path)
-        predict, score = model_predict(hash_name)
+        # 3. Send the file to be processed by the `model` service
+        predict, score = model_predict(new_name)
 
+        #4. Update `context` dict with the corresponding values                     
         context = {
-            "prediction": predict,
-            "score": f"{score:.2%}",
-            "filename": hash_name
+            "prediction":   predict,
+            "score":        score,
+            "filename":     new_name,
         }
 
         # Update `render_template()` parameters as needed
+        
         return render_template(
-            "index.html", filename=hash_name, context=context
+            "index.html", filename = new_name, context = context
         )
     # File received and but it isn't an image
     else:
-        flash("Allowed image types are -> png, jpg, jpeg, gif")
+        #flash("Allowed image types are -> png, jpg, jpeg, gif")
         return redirect(request.url)
 
 
@@ -110,37 +112,44 @@ def predict():
         - "prediction" model predicted class as string.
         - "score" model confidence score for the predicted class as float.
     """
-    # Check a file was sent and that file is an image
-    # Store the image to disk
-    # Send the file to be processed by the `model` service
-    # Update and return `rpse` dict with the corresponding values
+    # first lets create de json file for the error cases:
+    dic_error_rpse = {"success": False, "prediction": None, "score": None}
+
+    # if there is no file recives:
+    if "file" not in request.files:
+        return jsonify(dic_error_rpse),400
+
+    # File received but without a name:
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify(dic_error_rpse),400
+
+    # Good cases: 
+    #   1. Check a file was sent and that file is an image:
+       
+    if file and utils.allowed_file(file.filename) :
+        new_name    = utils.get_file_hash(file)
+        path        = os.path.join(settings.UPLOAD_FOLDER, new_name)
+        
+        if not os.path.exists(path):
+            file.save(path)
+
+    #   3. Send the file to be processed by the `model` service
+        predict, score = model_predict(new_name)
+
+    #   4. Update and return `rpse` dict with the corresponding values
+        rpse = {
+                "success":      True, 
+                "prediction":   predict, 
+                "score":        score
+                }
+        return jsonify(rpse),200
     # If user sends an invalid request (e.g. no file provided) this endpoint
     # should return `rpse` dict with default values HTTP 400 Bad Request code
-    
-    rpse = {"success": False, "prediction": None, "score": None}
-    # file_check = ("file" in request.files) & (request.files["file"] is not None)
-
-    if not "file" in request.files:
-        return jsonify(rpse), 400
-    
-    file = request.files["file"]
-    if request.files["file"] is None:
-        return jsonify(rpse), 400
-
-    if utils.allowed_file(file.filename):
-        hash_name = utils.get_file_hash(file)
-        file_path = os.path.join(settings.UPLOAD_FOLDER, hash_name)
-        if os.path.isfile(file_path) == False:
-            hash_name = secure_filename(hash_name)
-            file.save(file_path)
-        predict, score = model_predict(hash_name)
-        rpse = {"success": True, "prediction": predict, "score": score}
-        return jsonify(rpse), 200
-
+   
     else:
-        return jsonify(rpse), 400
-
-
+        return jsonify(dic_error_rpse),400
+    
 @router.route("/feedback", methods=["GET", "POST"])
 def feedback():
     """
@@ -164,13 +173,12 @@ def feedback():
     """
     # Get reported predictions from `report` key
     report = request.form.get("report")
-    report = json.dumps(report)
-    report = json.loads(report)
-
-    # Store the reported data to a file on the corresponding path
-    # already provided in settings.py module
-    with open(settings.FEEDBACK_FILEPATH, "a") as data:
-        data.write(str(report) + "\n")
-        data.close()
-
+    # if there is a report, then open it and whrite 
+    if report:
+        with open(
+            settings.FEEDBACK_FILEPATH,'a+'
+        ) as f:
+            f.write(report+'\n')
+            # \n is necessary to read it nicely
+    
     return render_template("index.html")
