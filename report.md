@@ -36,4 +36,4 @@ The global RPS is 7,8 with a 1% failures.
 
 ### Conclusion
 
-Scaling the model clearly improves the performance to processing request. Even though this improvement is not linear, it still makes a clear diference: almost twice as fast in global RPS and less then half of failures with almost 46% more of request processed. 
+Scaling the model clearly improves the performance to processing request. Even though this improvement is not linear, it still makes a clear diference: almost twice as fast in global RPS and less then half of failures with almost 46% more of request processed.
